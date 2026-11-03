@@ -12,8 +12,16 @@
   window.Cloud = Cloud;
   if (!enabled) return;
 
+  // Проста заключваща опашка в рамките на страницата. Вградената на библиотеката ползва navigator.locks,
+  // а при някои браузъри/режими заявката за вход остава „висяща“ и екранът не се показва.
+  var lockChain = Promise.resolve();
+  function pageLock(name, acquireTimeout, fn) {
+    var run = lockChain.then(function () { return fn(); });
+    lockChain = run.then(function () {}, function () {});
+    return run;
+  }
   var client = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {
-    auth: { flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    auth: { flowType: 'pkce', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, lock: pageLock }
   });
   Cloud.client = client;
 

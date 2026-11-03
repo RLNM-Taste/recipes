@@ -866,9 +866,13 @@
         else if (ev === 'SIGNED_OUT') { S.booted = false; S.uid = null; showLogin(); }
       };
       Cloud.onRecovery = function () { S.login = { mode: 'newpw' }; showLogin(); };
+      var gotUser = false;
+      // Ако проверката за влязъл потребител „увисне“, не оставяме празна страница
+      setTimeout(function () { if (!gotUser && !S.booted && !S.booting) showLogin(); }, 8000);
       Cloud.getUser().then(function (u) {
+        gotUser = true;
         if (u && !(S.login && S.login.mode === 'newpw')) boot(); else showLogin();
-      }).catch(function () { showLogin(); });
+      }).catch(function () { gotUser = true; showLogin(); });
     } else {
       boot();
     }
