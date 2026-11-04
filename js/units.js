@@ -151,7 +151,19 @@
     if (!line) return null;
     if (/^\d+\s*[-–]\s*\d+/.test(line)) return { amount: null, unit: '', name: line, original: '' };
     var a = parseAmount(line);
-    if (!a) return { amount: null, unit: '', name: line, original: '' };
+    if (!a) {
+      // количество накрая: „Брашно – 500 г“, „Масло, 100 г“, „Брашно 500 г“, „Сол - на вкус“
+      var tm = line.match(/^(.*?[^\s\-–—:,])\s*(?:[\-–—:,]\s*|\s)(\d.*|на вкус)$/i);
+      if (tm && tm[1].length > 1) {
+        if (/^на вкус$/i.test(tm[2])) return { amount: null, unit: 'на вкус', name: tm[1].trim(), original: '' };
+        var tail = parseLine(tm[2]);
+        if (tail && tail.name === '' && (tail.amount != null || tail.unit === 'на вкус')) {
+          tail.name = tm[1].trim();
+          return tail;
+        }
+      }
+      return { amount: null, unit: '', name: line, original: '' };
+    }
     var rest = a.rest, key = '', text = '';
     for (var i = 0; i < UNIT_PATTERNS.length; i++) {
       var m = rest.match(UNIT_PATTERNS[i][0]);
