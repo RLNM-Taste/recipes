@@ -648,7 +648,7 @@
     }
     return '<div class="note" style="display:block"><b>Данните са само на това устройство.</b><br>Пази копие чрез „Запази копие“ по-долу.</div>';
   }
-  var APP_VERSION = '2026-11-05 л';
+  var APP_VERSION = '2026-11-05 м';
   /* ---------- статистика само за собственика ---------- */
   var OWNER = 'rumy.recipes@gmail.com';
   var ADMIN_FN = 'smart-responder'; // Supabase му даде това име при качването; адресът на функцията не се сменя след това
@@ -670,6 +670,13 @@
       h += row('Лимитът на Gemini днес', d.limitHitToday ? '<span style="color:var(--danger)">свършил (' + d.limitHitToday.n + ' път/и)</span>' : 'не е свършвал');
       h += '</ul>';
       if (d.perUser && d.perUser.length) h += '<div class="sm">Днес по акаунти: ' + d.perUser.map(function (x) { return esc(x.email) + ' – ' + x.n; }).join('; ') + '</div>';
+      if (d.accounts && d.accounts.length) {
+        var fd = function (s) { if (!s) return '—'; var x = new Date(s); return isNaN(x) ? '—' : x.getDate() + '.' + (x.getMonth() + 1) + '.' + x.getFullYear(); };
+        h += '<details class="paste" style="margin-top:10px"><summary>Акаунти (' + d.accounts.length + ')</summary><ul class="picks">' +
+          d.accounts.map(function (a) {
+            return '<li><label><span>' + esc(a.email) + (a.confirmed ? '' : ' <em class="in-list">непотвърден</em>') + '</span><b style="font-weight:500;font-size:12px">регистриран ' + fd(a.created) + '<br>последен вход ' + fd(a.last) + '</b></label></li>';
+          }).join('') + '</ul></details>';
+      }
       box.innerHTML = h + '</div>';
     }).catch(function (e) { box.innerHTML = '<div class="hint">' + esc(e && e.message ? e.message : 'Статистиката не може да се зареди.') + '</div>'; });
   }
