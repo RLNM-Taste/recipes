@@ -79,13 +79,14 @@
     var m = String(url || '').match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/))([\w-]{11})/);
     return m ? m[1] : '';
   }
-  function readImage(file) {
+  function readImage(file) { return readImageMax(file, 1400); }
+  function readImageMax(file, max) {
     return new Promise(function (res, rej) {
       var fr = new FileReader();
       fr.onload = function () {
         var img = new Image();
         img.onload = function () {
-          var k = Math.min(1, 1400 / Math.max(img.width, img.height));
+          var k = Math.min(1, max / Math.max(img.width, img.height));
           var c = document.createElement('canvas');
           c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
           c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
@@ -473,6 +474,42 @@
       return '<div class="ph"><img src="' + p + '" alt=""><button type="button" data-act="delph" data-i="' + i + '" aria-label="Махни снимката">×</button></div>';
     }).join('') + '<button type="button" class="addph" data-act="addph" aria-label="Добави снимка">+</button>';
   }
+  /* ---------- рецепта от снимка (Gemini през функцията read-recipe) ---------- */
+  function scanHtml() {
+    return '<div class="scan"><button type="button" class="btn primary" data-act="scan">Рецепта от снимка</button>' +
+      '<div class="hint">Снимай или избери до 3 снимки на една рецепта (печатна или на ръка). Попълва се чернова, която ти проверяваш и поправяш, преди да запазиш. Снимките се изпращат към Google Gemini за разчитане.</div>' +
+      '<div id="scanst" class="hint" role="status"></div></div><input type="file" id="scanin" accept="image/*" multiple hidden>';
+  }
+  function scanMessage(err) {
+    var c = err && err.context;
+    if (c && typeof c.json === 'function') return c.json().then(function (j) { return (j && j.error) || 'Разпознаването не успя.'; }, function () { return 'Разпознаването не успя.'; });
+    return Promise.resolve(/Failed to fetch|NetworkError/i.test(String(err && err.message)) ? 'Няма връзка с интернет.' : 'Разпознаването не успя.');
+  }
+  function applyDraft(d, imgs) {
+    var f = $('#f'); if (!f) return;
+    var set = function (n, v) { var el = f.querySelector('[name=' + n + ']'); if (el && v != null && v !== '') el.value = v; };
+    set('title', d.title); set('cat', d.cat); set('time', d.time); set('servings', d.servings);
+    set('tags', (d.tags || []).join(', ')); set('steps', (d.steps || []).join('\n'));
+    var rows = (d.ingredients || []).map(U.parseLine).filter(Boolean);
+    if (rows.length) $('#ingrows').innerHTML = rows.map(irow).join('');
+    S.draft.photos = S.draft.photos.concat(imgs); $('#photos').innerHTML = photosHtml();
+  }
+  function scanRecipe(files) {
+    var st = $('#scanst'), btn = document.querySelector('[data-act=scan]');
+    if (!files.length || !st) return;
+    st.textContent = 'Чета рецептата… Може да отнеме до половин минута.'; btn.disabled = true;
+    S.pending = Promise.all(files.map(function (f) { return readImageMax(f, 2000); })).then(function (imgs) {
+      return Cloud.client.functions.invoke('read-recipe', { body: { images: imgs } }).then(function (r) {
+        if (r.error) return scanMessage(r.error).then(function (m) { throw new Error(m); });
+        if (!r.data || !r.data.draft) throw new Error('Разпознаването не върна рецепта.');
+        applyDraft(r.data.draft, imgs);
+        var u = r.data.draft.uncertain || [];
+        if ($('#scanst')) $('#scanst').textContent = 'Готово. Прочети внимателно всичко и поправи грешките, преди да запазиш.' + (u.length ? ' Не съм сигурен за: ' + u.join('; ') + '.' : '');
+      });
+    }).catch(function (e) {
+      if ($('#scanst')) $('#scanst').textContent = e && e.message && e.message.indexOf('[object') < 0 ? e.message : 'Снимката не може да се прочете.';
+    }).then(function () { var b = document.querySelector('[data-act=scan]'); if (b) b.disabled = false; });
+  }
   function viewForm(id) {
     var r = id ? find(id) : null;
     if (id && !r) return head('Рецептата не е намерена', null, { back: true });
@@ -480,6 +517,7 @@
     var ings = r && r.ingredients && r.ingredients.length ? r.ingredients : [null, null, null];
     var cur = r ? r.cat : CATS[0].id;
     return head(r ? 'Редакция' : 'Нова рецепта', null, { back: true }) +
+      (!r && Cloud.enabled ? scanHtml() : '') +
       '<form id="f" autocomplete="off">' +
       '<label class="fld">Заглавие<input type="text" name="title" required value="' + esc(r ? r.title : '') + '"></label>' +
       '<div class="two"><label class="fld">Категория<select name="cat">' + CATS.map(function (c) { return '<option value="' + c.id + '"' + (c.id === cur ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('') + '</select></label>' +
@@ -571,7 +609,7 @@
     }
     return '<div class="note" style="display:block"><b>Данните са само на това устройство.</b><br>Пази копие чрез „Запази копие“ по-долу.</div>';
   }
-  var APP_VERSION = '2026-11-04 в';
+  var APP_VERSION = '2026-11-04 г';
   function viewMe() {
     var demo = S.recipes.filter(function (r) { return r.demo; }).length;
     return head('Профил') + accountNote() +
@@ -852,6 +890,9 @@
       case 'addph':
         $('#phin').click();
         break;
+      case 'scan':
+        $('#scanin').click();
+        break;
       case 'delph':
         S.draft.photos.splice(+t.dataset.i, 1); $('#photos').innerHTML = photosHtml();
         break;
@@ -903,6 +944,8 @@
         toast(imgs.length > 1 ? 'Добавени ' + imgs.length + ' снимки' : 'Снимката е добавена');
       }).catch(function () { toast('Снимката не може да се прочете'); });
       t.value = '';
+    } else if (t.id === 'scanin') {
+      scanRecipe(Array.prototype.slice.call(t.files).slice(0, 3)); t.value = '';
     } else if (t.id === 'phin') {
       var files = Array.prototype.slice.call(t.files);
       Promise.all(files.map(readImage)).then(function (imgs) {

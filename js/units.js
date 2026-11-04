@@ -157,7 +157,7 @@
       var m = rest.match(UNIT_PATTERNS[i][0]);
       if (m) { key = UNIT_PATTERNS[i][1]; text = m[0]; rest = rest.slice(m[0].length).trim(); break; }
     }
-    rest = rest.replace(/^от\s+/i, '').trim();
+    rest = rest.replace(/^[.,;:]\s*/, '').replace(/^от\s+/i, '').trim(); // „220 гр. ориз“ -> „ориз“
     return convert(a.v, key, text, rest);
   }
 
