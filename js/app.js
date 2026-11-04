@@ -196,7 +196,7 @@
   }
   function viewHome() {
     var fav = S.recipes.filter(function (r) { return r.fav; }).length;
-    return head('Моите рецепти', S.recipes.length + ' рецепти · ' + fav + ' любими', { right: '<div style="display:flex;gap:8px"><a class="iconbtn" href="#/plan" aria-label="Ще сготвя">' + ICON.cal + '</a><a class="iconbtn" href="#/fav" aria-label="Любими рецепти">' + ICON.heart + '</a></div>' }) +
+    return head('Щипка вкус', S.recipes.length + ' рецепти · ' + fav + ' любими', { right: '<div style="display:flex;gap:8px"><a class="iconbtn" href="#/plan" aria-label="Ще сготвя">' + ICON.cal + '</a><a class="iconbtn" href="#/fav" aria-label="Любими рецепти">' + ICON.heart + '</a></div>' }) +
       '<label class="search">' + ICON.search + '<input id="q" type="text" placeholder="Търси по име или продукт" value="' + esc(S.q) + '" autocomplete="off"></label>' +
       '<div class="chips" id="chips">' + chips() + '</div><div id="results">' + results() + '</div>';
   }
@@ -490,7 +490,7 @@
       reset: '<button type="button" class="lnk" data-act="lmode" data-m="in">Назад към входа</button>',
       newpw: ''
     }[m];
-    return '<div class="login"><div class="lg-brand">Рецептурник</div><h1 class="title">' + titles[m] + '</h1>' +
+    return '<div class="login"><div class="lg-brand">Щипка вкус</div><h1 class="title">' + titles[m] + '</h1>' +
       (m === 'up' ? '<p class="hint">Ще получиш писмо за потвърждение на имейла.</p>' : '') +
       (m === 'reset' ? '<p class="hint">Ще ти изпратим връзка за нова парола.</p>' : '') +
       (L.err ? '<div class="note err">' + esc(L.err) + '</div>' : '') + (L.ok ? '<div class="note okk">' + esc(L.ok) + '</div>' : '') +
