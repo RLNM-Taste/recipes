@@ -541,7 +541,7 @@
       return Cloud.client.functions.invoke('read-recipe', { body: { images: imgs } }).then(function (r) {
         if (r.error) return scanMessage(r.error).then(function (m) { throw new Error(m); });
         if (!r.data || !r.data.draft) throw new Error('Разпознаването не върна рецепта.');
-        applyDraft(r.data.draft, imgs);
+        applyDraft(r.data.draft, []); // снимката на ръкописа не е снимка на ястието — не се добавя към рецептата
         var u = r.data.draft.uncertain || [];
         if ($('#scanst')) $('#scanst').textContent = 'Готово. Прочети внимателно всичко и поправи грешките, преди да запазиш.' + (u.length ? ' Не съм сигурен за: ' + u.join('; ') + '.' : '');
       });
@@ -648,7 +648,7 @@
     }
     return '<div class="note" style="display:block"><b>Данните са само на това устройство.</b><br>Пази копие чрез „Запази копие“ по-долу.</div>';
   }
-  var APP_VERSION = '2026-11-04 й';
+  var APP_VERSION = '2026-11-05 к';
   function viewMe() {
     var demo = S.recipes.filter(function (r) { return r.demo; }).length;
     return head('Профил') + accountNote() +
