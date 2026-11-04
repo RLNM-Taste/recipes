@@ -459,7 +459,13 @@
       var amount = unit === 'на вкус' ? null : U.parseAmountStr(aRaw);
       if (aRaw && amount == null && unit !== 'на вкус') { name = (aRaw + ' ' + name).trim(); }
       if (!name) return;
-      ings.push({ amount: amount, unit: amount == null && unit !== 'на вкус' ? '' : unit, name: name, original: row.querySelector('.io').value.trim() });
+      var original = row.querySelector('.io').value.trim();
+      // Мярка като „1 чаена чаша“ + „брашно“ се превръща в грамове по таблицата, както в „Постави списък“
+      if (amount != null && unit && !row.querySelector('.inm').value.match(/^\s*$/)) {
+        var cv = U.parseLine(U.fmt(amount) + ' ' + unit + ' ' + name);
+        if (cv && cv.original && cv.amount != null) { amount = cv.amount; unit = cv.unit; original = original || cv.original; }
+      }
+      ings.push({ amount: amount, unit: amount == null && unit !== 'на вкус' ? '' : unit, name: name, original: original });
     });
     var steps = val('steps').split('\n').map(function (s) { return s.replace(/^\s*\d+[.)]\s*/, '').trim(); }).filter(Boolean);
     var old = S.draft.id ? find(S.draft.id) : null;
