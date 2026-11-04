@@ -364,7 +364,7 @@
     i = i || { amount: null, unit: '', name: '', original: '' };
     var units = U.UNIT_OPTIONS.slice();
     if (i.unit && units.indexOf(i.unit) < 0) units.push(i.unit);
-    return '<div class="irow"><input class="ia" inputmode="decimal" placeholder="к-во" value="' + esc(i.amount == null ? '' : U.fmt(i.amount)) + '">' +
+    return '<div class="irow"><input class="ia" inputmode="text" placeholder="к-во" value="' + esc(i.amount == null ? '' : U.fmt(i.amount)) + '">' +
       '<select class="iu" aria-label="Мярка">' + units.map(function (u) { return '<option' + (u === i.unit ? ' selected' : '') + '>' + esc(u) + '</option>'; }).join('') + '</select>' +
       '<input class="inm" placeholder="продукт" value="' + esc(i.name) + '">' +
       '<button type="button" class="x" data-act="delrow" aria-label="Махни реда">×</button>' +
@@ -412,10 +412,11 @@
     $$('.irow').forEach(function (row) {
       var name = row.querySelector('.inm').value.trim();
       var aRaw = row.querySelector('.ia').value.trim();
-      var amount = U.parseAmountStr(aRaw);
-      if (aRaw && amount == null) { name = (aRaw + ' ' + name).trim(); }
+      var unit = row.querySelector('.iu').value;
+      var amount = unit === 'на вкус' ? null : U.parseAmountStr(aRaw);
+      if (aRaw && amount == null && unit !== 'на вкус') { name = (aRaw + ' ' + name).trim(); }
       if (!name) return;
-      ings.push({ amount: amount, unit: amount == null ? '' : row.querySelector('.iu').value, name: name, original: row.querySelector('.io').value.trim() });
+      ings.push({ amount: amount, unit: amount == null && unit !== 'на вкус' ? '' : unit, name: name, original: row.querySelector('.io').value.trim() });
     });
     var steps = val('steps').split('\n').map(function (s) { return s.replace(/^\s*\d+[.)]\s*/, '').trim(); }).filter(Boolean);
     var old = S.draft.id ? find(S.draft.id) : null;

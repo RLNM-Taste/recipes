@@ -84,7 +84,13 @@
 
   function parseAmount(s) {
     s = s.trim();
-    var m = s.match(/^(\d+)\s+(\d+)\/(\d+)\s*(.*)$/);
+    var m = s.match(/^(?:една|един|едно)\s+и\s+половина\s*(.*)$/i);
+    if (m) return { v: 1.5, rest: m[1] };
+    m = s.match(/^(половинка|половин|половина)(?![а-я])\s*(.*)$/i);
+    if (m) return { v: 0.5, rest: m[2] };
+    m = s.match(/^(една|един|едно)(?![а-я])\s*(.*)$/i);
+    if (m) return { v: 1, rest: m[2] };
+    m = s.match(/^(\d+)\s+(\d+)\/(\d+)\s*(.*)$/);
     if (m) return { v: +m[1] + m[2] / m[3], rest: m[4] };
     m = s.match(/^(\d+)\/(\d+)\s*(.*)$/);
     if (m) return { v: m[1] / m[2], rest: m[3] };
@@ -166,6 +172,7 @@
 
   // Текст за показване: "400 мл", "1,5 л", "3 бр."
   function display(ing, factor) {
+    if (ing.unit === 'на вкус') return 'на вкус';
     var v = scale(ing.amount, ing.unit, factor == null ? 1 : factor);
     if (v == null) return '';
     var unit = ing.unit || '';
@@ -177,6 +184,6 @@
   window.Units = {
     parseLine: parseLine, parseAmountStr: parseAmountStr, fmt: fmt, scale: scale, display: display,
     TABLES: TABLES, TABLE_ORDER: TABLE_ORDER, UNIT_TITLES: UNIT_TITLES, PRODUCT_NAMES: PRODUCT_NAMES,
-    UNIT_OPTIONS: ['', 'г', 'кг', 'мл', 'л', 'бр.', 'с.л.', 'ч.л.', 'дес. л.', 'чаена чаша', 'кафена чаша', 'водна чаша', 'щипка', 'шепа', 'бучки', 'кутийка', 'скилидки', 'връзка', 'пакет', 'консерва', 'глава']
+    UNIT_OPTIONS: ['', 'на вкус', 'г', 'кг', 'мл', 'л', 'бр.', 'с.л.', 'ч.л.', 'дес. л.', 'чаена чаша', 'кафена чаша', 'водна чаша', 'щипка', 'шепа', 'бучки', 'кутийка', 'скилидки', 'връзка', 'пакет', 'консерва', 'глава']
   };
 })();
