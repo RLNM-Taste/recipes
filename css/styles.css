@@ -193,3 +193,7 @@ details.paste textarea{margin:10px 0}
 @keyframes steam{0%{opacity:0;transform:translateY(8px)}35%{opacity:.85}100%{opacity:0;transform:translateY(-12px)}}
 @keyframes lidtilt{0%,100%{transform:rotate(0)}50%{transform:rotate(-3deg)}}
 @media (prefers-reduced-motion:reduce){.cooking .lid,.cooking .steam path{animation:none}.cooking .steam path{opacity:.6}}
+.btn svg{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.shopbtn{background:#E6EFE4;border-color:var(--forest);color:var(--forest);font-size:15.5px;padding:15px 16px}
+.shopbtn svg{width:26px;height:26px}
+.plan .pt svg{width:22px;height:22px;vertical-align:-5px;fill:none;stroke:var(--forest);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
