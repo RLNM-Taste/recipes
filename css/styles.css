@@ -197,3 +197,6 @@ details.paste textarea{margin:10px 0}
 .shopbtn{background:#E6EFE4;border-color:var(--forest);color:var(--forest);font-size:15.5px;padding:15px 16px}
 .shopbtn svg{width:26px;height:26px}
 .plan .pt svg{width:22px;height:22px;vertical-align:-5px;fill:none;stroke:var(--forest);stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.scanurl{display:flex;gap:8px;margin-top:12px}
+.scanurl input{flex:1;min-width:0;border:1px solid var(--line2);border-radius:14px;padding:12px 14px;font-size:14.5px;background:#fff}
+.scanurl .btn{width:auto;flex:none;padding:12px 14px}
