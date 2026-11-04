@@ -1,5 +1,5 @@
 /* Кешира файловете на приложението, за да се отваря бързо и без връзка. */
-var CACHE = 'rb-v2';
+var CACHE = 'rb-v3';
 var FILES = ['./', 'index.html', 'css/styles.css', 'js/units.js', 'js/data.js', 'js/store.js', 'js/config.js', 'js/cloud.js', 'js/app.js', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', function (e) {
@@ -13,6 +13,7 @@ self.addEventListener('activate', function (e) {
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
   // първо мрежата (за нови версии), при липса на връзка — кеш
+  // cache: 'no-cache' — браузърът пита сървъра дали файлът е сменен, вместо да ползва стара копия до 10 минути
   e.respondWith(fetch(e.request).then(function (r) {
     var copy = r.clone();
     caches.open(CACHE).then(function (c) { c.put(e.request, copy); });
