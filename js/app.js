@@ -293,6 +293,48 @@
       return '<li class="ing"><span>' + esc(i.name) + '</span><span class="a">' + (a ? '<b>' + esc(a) + '</b>' : '') + o + '</span></li>';
     }).join('');
   }
+  // Текст за споделяне: без бележките
+  function shareText(r) {
+    var sv = S.srv[r.id] || r.servings || 1, f = sv / (r.servings || sv || 1);
+    var t = r.title + '\n' + RB.cat(r.cat).name;
+    var meta = [];
+    if (r.time) meta.push('Приготвяне: ' + fmtTime(r.time));
+    meta.push('Порции: ' + sv);
+    t += '\n' + meta.join(' · ');
+    if ((r.ingredients || []).length) {
+      t += '\n\nПродукти:\n' + r.ingredients.map(function (i) {
+        var a = U.display(i, f);
+        return '• ' + (a ? a + ' ' : '') + i.name + (f === 1 && i.original ? ' (' + i.original + ')' : '');
+      }).join('\n');
+    }
+    if ((r.steps || []).length) t += '\n\nПриготвяне:\n' + r.steps.map(function (s, n) { return (n + 1) + '. ' + s; }).join('\n');
+    if (r.video) t += '\n\nВидео: ' + r.video;
+    if (r.source) t += '\nИзточник: ' + r.source;
+    return t + '\n\nЩипка вкус';
+  }
+  function fetchFile(src, n) {
+    return fetch(src).then(function (x) { return x.blob(); }).then(function (b) {
+      return new File([b], 'snimka-' + (n + 1) + '.jpg', { type: b.type || 'image/jpeg' });
+    });
+  }
+  function shareRecipe(r, withPhotos) {
+    var text = shareText(r);
+    var srcs = withPhotos ? (r.photos || []).concat((r.myPhotos || []).map(function (p) { return p.src; })).filter(Boolean) : [];
+    var files = Promise.resolve([]);
+    if (srcs.length) { toast('Подготвям снимките…'); files = Promise.all(srcs.map(fetchFile)).catch(function () { return []; }); }
+    files.then(function (list) {
+      var data = { title: r.title, text: text };
+      if (list.length && navigator.canShare && navigator.canShare({ files: list })) data.files = list;
+      if (navigator.share) {
+        return navigator.share(data).catch(function (e) { if (e && e.name !== 'AbortError') toast('Споделянето не успя'); });
+      }
+      // компютър без споделяне: копира се текстът
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        return navigator.clipboard.writeText(text).then(function () { toast('Рецептата е копирана. Постави я където искаш.'); }, function () { toast('Не мога да копирам'); });
+      }
+      toast('Този браузър не поддържа споделяне');
+    });
+  }
   function notesHtml(r) {
     if (!r.notes || !r.notes.length) return '<div class="hint">Още няма бележки.</div>';
     return r.notes.map(function (n) {
@@ -334,6 +376,7 @@
     h += '<div class="sec-t">Моите бележки</div><div id="notes">' + notesHtml(r) + '</div>' +
       '<div class="addnote"><textarea id="nt" placeholder="Добави бележка…" rows="2"></textarea><button class="btn small primary" data-act="addnote" data-id="' + r.id + '">Добави</button></div>';
     h += '<div class="row2" style="margin-top:22px"><a class="btn primary" href="#/cook/' + r.id + '">Режим за готвене</a></div>' +
+      '<div class="row2"><button class="btn" data-act="share" data-photos="1" data-id="' + r.id + '">Сподели със снимки</button><button class="btn" data-act="share" data-id="' + r.id + '">Сподели текста</button></div>' +
       '<div class="row2"><a class="btn" href="#/edit/' + r.id + '">Редактирай</a><button class="btn danger" data-act="del" data-id="' + r.id + '">Изтрий</button></div>';
     return h;
   }
@@ -596,6 +639,9 @@
         break;
       case 'back':
         if (S.d > 0) history.back(); else location.hash = '#/';
+        break;
+      case 'share':
+        if (r) shareRecipe(r, t.dataset.photos === '1');
         break;
       case 'fav':
         if (!r) return;
