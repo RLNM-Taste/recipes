@@ -181,3 +181,15 @@ details.paste textarea{margin:10px 0}
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:40;display:flex;align-items:center;justify-content:center;padding:14px}
 .lightbox img{max-width:100%;max-height:100%;border-radius:10px}
 .cfg{display:grid;grid-template-columns:1fr 90px;gap:8px 12px;align-items:center;margin-bottom:10px;font-size:14px}
+
+/* тенджера с пара, докато се чете рецептата от снимка */
+.cooking{display:flex;align-items:center;gap:12px;color:var(--forest);margin-top:8px}
+.cooking svg{width:72px;height:72px;flex:none;overflow:visible}
+.cooking .pot,.cooking .lid,.cooking .steam path{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.cooking .lid{transform-origin:46px 31px;animation:lidtilt 2.6s ease-in-out infinite}
+.cooking .steam path{opacity:0;animation:steam 2.4s ease-in-out infinite}
+.cooking .steam path:nth-child(2){animation-delay:.8s}
+.cooking .steam path:nth-child(3){animation-delay:1.6s}
+@keyframes steam{0%{opacity:0;transform:translateY(8px)}35%{opacity:.85}100%{opacity:0;transform:translateY(-12px)}}
+@keyframes lidtilt{0%,100%{transform:rotate(0)}50%{transform:rotate(-3deg)}}
+@media (prefers-reduced-motion:reduce){.cooking .lid,.cooking .steam path{animation:none}.cooking .steam path{opacity:.6}}
