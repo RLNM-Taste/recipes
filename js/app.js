@@ -312,6 +312,55 @@
     if (r.source) t += '\nИзточник: ' + r.source;
     return t + '\n\nЩипка вкус';
   }
+  // Рецептата като картинка: приложения като Messenger и Viber губят текста, когато се праща със снимки
+  function cardFile(r) {
+    return new Promise(function (resolve) {
+      try {
+        var sv = S.srv[r.id] || r.servings || 1, f = sv / (r.servings || sv || 1);
+        var W = 1080, P = 64, MW = W - 2 * P, FONT = 'system-ui, "Segoe UI", Roboto, Arial, sans-serif';
+        var cv = document.createElement('canvas'), ctx = cv.getContext('2d');
+        var items = [];
+        function add(text, size, weight, color, gap) { items.push({ t: text, s: size, w: weight, c: color, g: gap || 0 }); }
+        var meta = [RB.cat(r.cat).name];
+        if (r.time) meta.push('Приготвяне: ' + fmtTime(r.time));
+        meta.push('Порции: ' + sv);
+        add(r.title, 56, '700', '#3F5B4A', 12);
+        add(meta.join(' · '), 30, '400', '#7A7468', 36);
+        if ((r.ingredients || []).length) {
+          add('Продукти', 38, '700', '#3F5B4A', 12);
+          r.ingredients.forEach(function (i) {
+            var a = U.display(i, f);
+            add('• ' + (a ? a + ' ' : '') + i.name + (f === 1 && i.original ? ' (' + i.original + ')' : ''), 32, '400', '#2B2A27', 8);
+          });
+          items[items.length - 1].g = 36;
+        }
+        if ((r.steps || []).length) {
+          add('Приготвяне', 38, '700', '#3F5B4A', 12);
+          r.steps.forEach(function (s, n) { add((n + 1) + '. ' + s, 32, '400', '#2B2A27', 14); });
+          items[items.length - 1].g = 36;
+        }
+        if (r.video) add('Видео: ' + r.video, 26, '400', '#7A7468', 6);
+        if (r.source) add('Източник: ' + r.source, 26, '400', '#7A7468', 6);
+        add('Щипка вкус', 28, '700', '#3F5B4A', 0);
+        cv.width = W;
+        var lines = [], y = P;
+        items.forEach(function (it) {
+          ctx.font = it.w + ' ' + it.s + 'px ' + FONT;
+          var words = it.t.split(/\s+/), cur = '';
+          words.forEach(function (w) {
+            var test = cur ? cur + ' ' + w : w;
+            if (cur && ctx.measureText(test).width > MW) { lines.push({ t: cur, it: it, y: y }); y += Math.round(it.s * 1.35); cur = w; } else cur = test;
+          });
+          lines.push({ t: cur, it: it, y: y }); y += Math.round(it.s * 1.35) + it.g;
+        });
+        cv.height = y + P;
+        ctx.fillStyle = '#F6F3EE'; ctx.fillRect(0, 0, W, cv.height);
+        ctx.textBaseline = 'top';
+        lines.forEach(function (l) { ctx.font = l.it.w + ' ' + l.it.s + 'px ' + FONT; ctx.fillStyle = l.it.c; ctx.fillText(l.t, P, l.y); });
+        cv.toBlob(function (b) { resolve(b ? new File([b], 'recepta.png', { type: 'image/png' }) : null); }, 'image/png');
+      } catch (e) { resolve(null); }
+    });
+  }
   function fetchFile(src, n) {
     return fetch(src).then(function (x) { return x.blob(); }).then(function (b) {
       return new File([b], 'snimka-' + (n + 1) + '.jpg', { type: b.type || 'image/jpeg' });
@@ -321,7 +370,12 @@
     var text = shareText(r);
     var srcs = withPhotos ? (r.photos || []).concat((r.myPhotos || []).map(function (p) { return p.src; })).filter(Boolean) : [];
     var files = Promise.resolve([]);
-    if (srcs.length) { toast('Подготвям снимките…'); files = Promise.all(srcs.map(fetchFile)).catch(function () { return []; }); }
+    if (withPhotos) {
+      toast('Подготвям рецептата…');
+      files = Promise.all([cardFile(r), Promise.all(srcs.map(fetchFile)).catch(function () { return []; })]).then(function (x) {
+        return (x[0] ? [x[0]] : []).concat(x[1]);
+      });
+    }
     files.then(function (list) {
       var data = { title: r.title, text: text };
       if (list.length && navigator.canShare && navigator.canShare({ files: list })) data.files = list;
