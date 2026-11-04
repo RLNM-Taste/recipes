@@ -373,6 +373,7 @@
     if (withPhotos) {
       toast('Подготвям рецептата…');
       files = Promise.all([cardFile(r), Promise.all(srcs.map(fetchFile)).catch(function () { return []; })]).then(function (x) {
+        if (!x[0]) toast('Не успях да направя картинката с рецептата');
         return (x[0] ? [x[0]] : []).concat(x[1]);
       });
     }
@@ -570,6 +571,7 @@
     }
     return '<div class="note" style="display:block"><b>Данните са само на това устройство.</b><br>Пази копие чрез „Запази копие“ по-долу.</div>';
   }
+  var APP_VERSION = '2026-11-04 в';
   function viewMe() {
     var demo = S.recipes.filter(function (r) { return r.demo; }).length;
     return head('Профил') + accountNote() +
@@ -577,7 +579,8 @@
       '<input type="file" id="impin" accept="application/json,.json" hidden>' +
       '<div class="sec-t">Мерки</div><div class="hint">„Чаши“ и „лъжици“ се превръщат в мл и г по таблицата по-долу. Продукт, който го няма в таблицата, остава в оригиналната мярка.</div>' +
       '<details class="paste"><summary>Покажи таблицата</summary>' + measuresTable() + '</details>' +
-      (demo ? '<div class="sec-t">Примерни рецепти</div><div class="hint">Има ' + demo + ' примерни рецепти, за да видиш как изглежда приложението.</div><button class="btn danger small" data-act="deldemo">Изтрий примерните</button>' : '');
+      (demo ? '<div class="sec-t">Примерни рецепти</div><div class="hint">Има ' + demo + ' примерни рецепти, за да видиш как изглежда приложението.</div><button class="btn danger small" data-act="deldemo">Изтрий примерните</button>' : '') +
+      '<div class="hint" style="margin-top:24px">Версия ' + APP_VERSION + '</div>';
   }
 
   /* ---------- вход (облак) ---------- */
