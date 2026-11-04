@@ -501,12 +501,15 @@
     S.pending = Cloud.client.functions.invoke('read-recipe', { body: { url: link } }).then(function (r) {
       if (r.error) return scanMessage(r.error).then(function (m) { throw new Error(m); });
       if (!r.data || !r.data.draft) throw new Error('Не върна рецепта.');
-      applyDraft(r.data.draft, []);
+      var pic = r.data.image && /^data:image\//.test(r.data.image) ? r.data.image : null;
+      return (pic ? fetch(pic).then(function (x) { return x.blob(); }).then(function (b) { return readImageMax(b, 1400); }).then(function (d) { return [d]; }, function () { return []; }) : Promise.resolve([])).then(function (imgs) {
+      applyDraft(r.data.draft, imgs);
       var f = $('#f');
       var fld = f && f.querySelector('[name=' + (r.data.kind === 'video' ? 'video' : 'source') + ']');
       if (fld && !fld.value) fld.value = link;
       var u = r.data.draft.uncertain || [];
-      if ($('#scanst')) $('#scanst').textContent = 'Готово. Прочети внимателно всичко и поправи грешките, преди да запазиш.' + (u.length ? ' Не съм сигурен за: ' + u.join('; ') + '.' : '');
+      if ($('#scanst')) $('#scanst').textContent = 'Готово. Прочети внимателно всичко и поправи грешките, преди да запазиш.' + (u.length ? ' Не съм сигурен за: ' + u.join('; ') + '.' : '') + (imgs.length ? ' Добавена е основната снимка от сайта.' : '');
+      });
     }).catch(function (e) {
       if ($('#scanst')) $('#scanst').textContent = e && e.message && e.message.indexOf('[object') < 0 ? e.message : 'Адресът не може да се прочете.';
     }).then(function () { $$('.scan .btn').forEach(function (b) { b.disabled = false; }); });
@@ -645,7 +648,7 @@
     }
     return '<div class="note" style="display:block"><b>Данните са само на това устройство.</b><br>Пази копие чрез „Запази копие“ по-долу.</div>';
   }
-  var APP_VERSION = '2026-11-04 з';
+  var APP_VERSION = '2026-11-04 й';
   function viewMe() {
     var demo = S.recipes.filter(function (r) { return r.demo; }).length;
     return head('Профил') + accountNote() +

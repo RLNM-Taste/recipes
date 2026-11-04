@@ -149,7 +149,22 @@
   function parseLine(line) {
     line = String(line || '').replace(/^[\-\*•\s]+/, '').trim();
     if (!line) return null;
-    if (/^\d+\s*[-–]\s*\d+/.test(line)) return { amount: null, unit: '', name: line, original: '' };
+    // диапазон „450-480 г брашно“: взема се средната стойност, а диапазонът остава като оригинал
+    var rg = line.match(/^(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)\s*(.*)$/);
+    if (rg) {
+      var lo = parseFloat(rg[1].replace(',', '.')), hi = parseFloat(rg[2].replace(',', '.'));
+      if (hi > lo && rg[3]) {
+        var rp = parseLine(fmt((lo + hi) / 2) + ' ' + rg[3]);
+        if (rp && rp.amount != null) {
+          if (!rp.original) {
+            var o = line.endsWith(rp.name) ? line.slice(0, line.length - rp.name.length).trim() : '';
+            if (o) rp.original = o;
+          }
+          return rp;
+        }
+      }
+      return { amount: null, unit: '', name: line, original: '' };
+    }
     var a = parseAmount(line);
     if (!a) {
       // количество накрая: „Брашно – 500 г“, „Масло, 100 г“, „Брашно 500 г“, „Сол - на вкус“
