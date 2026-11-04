@@ -184,6 +184,6 @@
   window.Units = {
     parseLine: parseLine, parseAmountStr: parseAmountStr, fmt: fmt, scale: scale, display: display,
     TABLES: TABLES, TABLE_ORDER: TABLE_ORDER, UNIT_TITLES: UNIT_TITLES, PRODUCT_NAMES: PRODUCT_NAMES,
-    UNIT_OPTIONS: ['', 'на вкус', 'г', 'кг', 'мл', 'л', 'бр.', 'с.л.', 'ч.л.', 'дес. л.', 'чаена чаша', 'кафена чаша', 'водна чаша', 'щипка', 'шепа', 'бучки', 'кутийка', 'скилидки', 'връзка', 'пакет', 'консерва', 'глава']
+    UNIT_OPTIONS: ['', 'на вкус', 'г', 'кг', 'мл', 'л', 'бр.', 'с.л.', 'ч.л.','чаена чаша', 'кафена чаша', 'водна чаша', 'щипка', 'шепа', 'бучки', 'кутийка', 'скилидки', 'връзка', 'пакет', 'консерва', 'глава']
   };
 })();
