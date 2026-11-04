@@ -51,6 +51,7 @@
   var ICON = {
     heart: '<svg viewBox="0 0 24 24" width="21" height="21"><path d="M12 20.5s-7.5-4.6-9-9.2C2 8 4 5.5 6.8 5.5c1.8 0 3.2 1 5.2 3 2-2 3.4-3 5.2-3C20 5.5 22 8 21 11.3c-1.5 4.6-9 9.2-9 9.2z"/></svg>',
     back: '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M15 5l-7 7 7 7"/></svg>',
+    bag: '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M5 11h14l-1.2 8.6a1.2 1.2 0 0 1-1.2 1H7.4a1.2 1.2 0 0 1-1.2-1z"/><circle cx="9" cy="7.6" r="2.6"/><path d="M9 5V3.6M15 11V4.5M13.4 6.2L15 4l1.6 2.2"/></svg>',
     close: '<svg viewBox="0 0 24 24" width="20" height="20"><path d="M6 6l12 12M18 6L6 18"/></svg>',
     search: '<svg viewBox="0 0 24 24" width="20" height="20"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
     plus: '<svg viewBox="0 0 24 24" width="24" height="24"><path d="M12 5v14M5 12h14"/></svg>',
@@ -271,17 +272,17 @@
   }
   function shopPickHtml(r) {
     if (!S.shopOpen[r.id]) {
-      return '<div class="row2" style="margin:0 0 8px"><button class="btn" data-act="shopopen" data-id="' + r.id + '">Какво трябва да купя?</button></div>';
+      return '<div class="row2" style="margin:0 0 8px"><button class="btn shopbtn" data-act="shopopen" data-id="' + r.id + '">' + ICON.bag + 'Какво трябва да купя?</button></div>';
     }
     var ings = r.ingredients || [], sv = S.srv[r.id] || r.servings || 1, f = sv / (r.servings || 1);
     if (!ings.length) return '<div class="plan"><div class="pt">Какво трябва да купя?</div><div class="sm">Рецептата още няма продукти.</div></div>';
-    return '<div class="plan"><div class="pt">Какво трябва да купя?</div><div class="sm">Отбележи продуктите, които нямаш. Количествата са за ' + sv + ' порции.</div><ul class="picks">' +
+    return '<div class="plan"><div class="pt">' + ICON.bag + ' Какво трябва да купя?</div><div class="sm">Отбележи продуктите, които нямаш. Количествата са за ' + sv + ' порции.</div><ul class="picks">' +
       ings.map(function (i, n) {
         var has = inShop(i);
         return '<li><label' + (has ? ' class="dis"' : '') + '><input type="checkbox" data-i="' + n + '"' + (has ? ' disabled' : '') + '><span>' + esc(i.name) +
           (has ? ' <em class="in-list">вече в списъка</em>' : '') + '</span><b>' + esc(U.display(i, f)) + '</b></label></li>';
       }).join('') + '</ul><div class="pk"><button data-act="pickall">Отбележи всички</button><button data-act="picknone">Махни отметките</button></div>' +
-      '<div class="row2"><button class="btn primary" data-act="shopadd" data-id="' + r.id + '">Добави в списъка за пазаруване</button></div>' +
+      '<div class="row2"><button class="btn primary" data-act="shopadd" data-id="' + r.id + '">' + ICON.bag + 'Добави в списъка за пазаруване</button></div>' +
       '<div class="row2" style="margin-top:6px"><button class="btn" data-act="shopclose" data-id="' + r.id + '">Затвори</button></div></div>';
   }
 
@@ -614,7 +615,7 @@
     }
     return '<div class="note" style="display:block"><b>Данните са само на това устройство.</b><br>Пази копие чрез „Запази копие“ по-долу.</div>';
   }
-  var APP_VERSION = '2026-11-04 д';
+  var APP_VERSION = '2026-11-04 е';
   function viewMe() {
     var demo = S.recipes.filter(function (r) { return r.demo; }).length;
     return head('Профил') + accountNote() +
