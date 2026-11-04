@@ -479,7 +479,37 @@
   function scanHtml() {
     return '<div class="scan"><button type="button" class="btn primary" data-act="scan">Рецепта от снимка</button>' +
       '<div class="hint">Снимай или избери до 3 снимки на една рецепта (печатна или на ръка). Попълва се чернова, която ти проверяваш и поправяш, преди да запазиш. Снимките се изпращат към Google Gemini за разчитане.</div>' +
+      '<div class="scanurl"><input type="url" id="scanurl" inputmode="url" autocapitalize="off" autocorrect="off" placeholder="Постави адрес на сайт или YouTube видео" aria-label="Адрес на рецепта">' +
+      '<button type="button" class="btn primary" data-act="scanurl">Рецепта от адрес</button></div>' +
+      '<div class="hint">Сайтът или видеото се четат от Google Gemini и рецептата се превръща в текст. Работи със сайтове с рецепти и публични YouTube видеа. Facebook, Instagram и TikTok не се поддържат — снимай екрана.</div>' +
       '<div id="scanst" class="hint" role="status"></div></div><input type="file" id="scanin" accept="image/*" multiple hidden>';
+  }
+  function cookingHtml(msg) {
+    return '<div class="cooking"><svg viewBox="0 0 72 72" aria-hidden="true">' +
+      '<path class="pot" d="M14 38h40v12a8 8 0 0 1-8 8H22a8 8 0 0 1-8-8zM14 42H8M54 42h6"/>' +
+      '<path class="lid" d="M17 34Q38 20 59 29M42 24.5v-4"/>' +
+      '<g class="steam"><path d="M22 30q-4-5 0-9t0-9"/><path d="M31 28q-4-5 0-9t0-9"/><path d="M40 26q-4-5 0-9t0-9"/></g></svg>' +
+      '<span>' + msg + '</span></div>';
+  }
+  function scanUrl(link) {
+    var st = $('#scanst');
+    if (!st) return;
+    link = (link || '').trim();
+    if (!link) { st.textContent = 'Постави адрес на сайт или на YouTube видео.'; return; }
+    st.innerHTML = cookingHtml('Чета рецептата от адреса… Видеата може да отнемат до минута.');
+    $$('.scan .btn').forEach(function (b) { b.disabled = true; });
+    S.pending = Cloud.client.functions.invoke('read-recipe', { body: { url: link } }).then(function (r) {
+      if (r.error) return scanMessage(r.error).then(function (m) { throw new Error(m); });
+      if (!r.data || !r.data.draft) throw new Error('Не върна рецепта.');
+      applyDraft(r.data.draft, []);
+      var f = $('#f');
+      var fld = f && f.querySelector('[name=' + (r.data.kind === 'video' ? 'video' : 'source') + ']');
+      if (fld && !fld.value) fld.value = link;
+      var u = r.data.draft.uncertain || [];
+      if ($('#scanst')) $('#scanst').textContent = 'Готово. Прочети внимателно всичко и поправи грешките, преди да запазиш.' + (u.length ? ' Не съм сигурен за: ' + u.join('; ') + '.' : '');
+    }).catch(function (e) {
+      if ($('#scanst')) $('#scanst').textContent = e && e.message && e.message.indexOf('[object') < 0 ? e.message : 'Адресът не може да се прочете.';
+    }).then(function () { $$('.scan .btn').forEach(function (b) { b.disabled = false; }); });
   }
   function scanMessage(err) {
     var c = err && err.context;
@@ -615,7 +645,7 @@
     }
     return '<div class="note" style="display:block"><b>Данните са само на това устройство.</b><br>Пази копие чрез „Запази копие“ по-долу.</div>';
   }
-  var APP_VERSION = '2026-11-04 е';
+  var APP_VERSION = '2026-11-04 ж';
   function viewMe() {
     var demo = S.recipes.filter(function (r) { return r.demo; }).length;
     return head('Профил') + accountNote() +
@@ -895,6 +925,9 @@
         break;
       case 'addph':
         $('#phin').click();
+        break;
+      case 'scanurl':
+        scanUrl($('#scanurl') && $('#scanurl').value);
         break;
       case 'scan':
         $('#scanin').click();
