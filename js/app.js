@@ -648,7 +648,31 @@
     }
     return '<div class="note" style="display:block"><b>Данните са само на това устройство.</b><br>Пази копие чрез „Запази копие“ по-долу.</div>';
   }
-  var APP_VERSION = '2026-11-05 к';
+  var APP_VERSION = '2026-11-05 л';
+  /* ---------- статистика само за собственика ---------- */
+  var OWNER = 'rumy.recipes@gmail.com';
+  var ADMIN_FN = 'smart-responder'; // Supabase му даде това име при качването; адресът на функцията не се сменя след това
+  function isOwner() { return !!(Cloud.enabled && Cloud.user && String(Cloud.user.email || '').toLowerCase() === OWNER); }
+  function adminHtml() {
+    if (!isOwner()) return '';
+    return '<div class="sec-t">Само за теб</div><div class="hint">Регистрации, разпознавания днес и дали безплатният лимит на Gemini е свършил.</div>' +
+      '<div id="admst"></div><div class="row2"><button class="btn" data-act="admstats">Покажи статистика</button></div>';
+  }
+  function adminStats() {
+    var box = document.getElementById('admst'); if (!box) return;
+    box.innerHTML = '<div class="hint">Зареждам…</div>';
+    Cloud.client.functions.invoke(ADMIN_FN, { body: {} }).then(function (r) {
+      if (r.error || !r.data) return scanMessage(r.error).then(function (m) { throw new Error(m === 'Разпознаването не успя.' ? 'Статистиката не може да се зареди. Провери дали функцията admin-stats е качена в Supabase.' : m); });
+      var d = r.data, h = '<div class="plan"><ul class="picks">';
+      var row = function (a, b) { return '<li><label><span>' + a + '</span><b>' + b + '</b></label></li>'; };
+      h += row('Регистрирани акаунти', d.users) + row('Нови за последните 24 часа', d.newToday) +
+        row('Разпознавания днес', d.scansToday) + row('Разпознавания за 7 дни', d.scansWeek);
+      h += row('Лимитът на Gemini днес', d.limitHitToday ? '<span style="color:var(--danger)">свършил (' + d.limitHitToday.n + ' път/и)</span>' : 'не е свършвал');
+      h += '</ul>';
+      if (d.perUser && d.perUser.length) h += '<div class="sm">Днес по акаунти: ' + d.perUser.map(function (x) { return esc(x.email) + ' – ' + x.n; }).join('; ') + '</div>';
+      box.innerHTML = h + '</div>';
+    }).catch(function (e) { box.innerHTML = '<div class="hint">' + esc(e && e.message ? e.message : 'Статистиката не може да се зареди.') + '</div>'; });
+  }
   function viewMe() {
     var demo = S.recipes.filter(function (r) { return r.demo; }).length;
     return head('Профил') + accountNote() +
@@ -657,6 +681,7 @@
       '<div class="sec-t">Мерки</div><div class="hint">„Чаши“ и „лъжици“ се превръщат в мл и г по таблицата по-долу. Продукт, който го няма в таблицата, остава в оригиналната мярка.</div>' +
       '<details class="paste"><summary>Покажи таблицата</summary>' + measuresTable() + '</details>' +
       (demo ? '<div class="sec-t">Примерни рецепти</div><div class="hint">Има ' + demo + ' примерни рецепти, за да видиш как изглежда приложението.</div><button class="btn danger small" data-act="deldemo">Изтрий примерните</button>' : '') +
+      adminHtml() +
       '<div class="hint" style="margin-top:24px">Версия ' + APP_VERSION + '</div>';
   }
 
@@ -928,6 +953,9 @@
         break;
       case 'addph':
         $('#phin').click();
+        break;
+      case 'admstats':
+        adminStats();
         break;
       case 'scanurl':
         scanUrl($('#scanurl') && $('#scanurl').value);
