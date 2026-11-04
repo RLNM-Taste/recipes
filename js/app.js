@@ -497,7 +497,12 @@
   function scanRecipe(files) {
     var st = $('#scanst'), btn = document.querySelector('[data-act=scan]');
     if (!files.length || !st) return;
-    st.textContent = 'Чета рецептата… Може да отнеме до половин минута.'; btn.disabled = true;
+    st.innerHTML = '<div class="cooking"><svg viewBox="0 0 72 72" aria-hidden="true">' +
+      '<path class="pot" d="M14 38h40v12a8 8 0 0 1-8 8H22a8 8 0 0 1-8-8zM14 42H8M54 42h6"/>' +
+      '<path class="lid" d="M17 34Q38 20 59 29M42 24.5v-4"/>' +
+      '<g class="steam"><path d="M22 30q-4-5 0-9t0-9"/><path d="M31 28q-4-5 0-9t0-9"/><path d="M40 26q-4-5 0-9t0-9"/></g></svg>' +
+      '<span>Чета рецептата… Може да отнеме до половин минута.</span></div>';
+    btn.disabled = true;
     S.pending = Promise.all(files.map(function (f) { return readImageMax(f, 2000); })).then(function (imgs) {
       return Cloud.client.functions.invoke('read-recipe', { body: { images: imgs } }).then(function (r) {
         if (r.error) return scanMessage(r.error).then(function (m) { throw new Error(m); });
@@ -609,7 +614,7 @@
     }
     return '<div class="note" style="display:block"><b>Данните са само на това устройство.</b><br>Пази копие чрез „Запази копие“ по-долу.</div>';
   }
-  var APP_VERSION = '2026-11-04 г';
+  var APP_VERSION = '2026-11-04 д';
   function viewMe() {
     var demo = S.recipes.filter(function (r) { return r.demo; }).length;
     return head('Профил') + accountNote() +
